@@ -1,29 +1,29 @@
-@Library('Shared')_
-pipeline{
-    agent { label 'dev-server'}
-    
-    stages{
-        stage("Code clone"){
-            steps{
-                sh "whoami"
-            clone("https://github.com/LondheShubham153/django-notes-app.git","main")
+@Library('my-shared-lib') _
+
+pipeline {
+    agent { label 'linux-build' }
+
+    environment {
+        DOCKER_HUB_USER = 'jrn0444' // Your verified username
+        IMAGE_NAME = 'django-notes-app'
+    }
+
+    stages {
+        stage('Clone') {
+            steps {
+                checkoutCode('gcp-vm-key', 'git@github.com:jrn04567-cyber/django-notes-app.git')
             }
         }
-        stage("Code Build"){
-            steps{
-            dockerbuild("notes-app","latest")
+        stage('Build & Push') {
+            steps {
+                // Calls the specific script from your library
+                dockerBuildPush(env.DOCKER_HUB_USER, env.IMAGE_NAME, 'dockerhubpass')
             }
         }
-        stage("Push to DockerHub"){
-            steps{
-                dockerpush("dockerHubCreds","notes-app","latest")
+        stage('Deploy') {
+            steps {
+                dockerDeploy()
             }
         }
-        stage("Deploy"){
-            steps{
-                deploy()
-            }
-        }
-        
     }
 }
